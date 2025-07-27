@@ -21,7 +21,6 @@
       justify-content: center;
       height: 100vh;
       overflow: hidden;
-      padding-bottom: env(safe-area-inset-bottom);
     }
 
     #game {
@@ -75,7 +74,6 @@
       justify-content: center;
       margin-top: 40px;
       gap: 100px;
-      margin-bottom: max(10px, env(safe-area-inset-bottom));
     }
 
     .arrow {
@@ -139,6 +137,7 @@
   </style>
 </head>
 <body>
+  <br />
   <div id="scoreBoard">Score: 0 | Time: 60 | Best: 0</div>
   <div id="game">
     <div class="squirrel" id="squirrel"></div>
@@ -147,6 +146,7 @@
     <div class="arrow" id="leftArrow">&#8592;</div>
     <div class="arrow" id="rightArrow">&#8594;</div>
   </div>
+  <br /><br /><br /><br /><br />
   
   <script>
     const game = document.getElementById("game");
