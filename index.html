@@ -1,305 +1,329 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Squirrel Catcher Game</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="favicon-32x32.png" type="image/x-icon" />
+    <title>Squirrel Catcher Game</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-    body {
-      background-color: #214382;
-      color: #fdf151;
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      overflow: hidden;
-    }
+      body {
+        background-color: #214382;
+        color: #fdf151;
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        overflow: hidden;
+      }
 
-    #game {
-      position: relative;
-      width: 100%;
-      max-width: 500px;
-      height: 80vh;
-      background: #1a2c50;
-      border: 3px solid #fdf151;
-      border-radius: 10px;
-      overflow: hidden;
-    }
+      #game {
+        position: relative;
+        width: 100%;
+        max-width: 500px;
+        height: 80vh;
+        background: #1a2c50;
+        border: 3px solid #fdf151;
+        border-radius: 10px;
+        overflow: hidden;
+      }
 
-    .squirrel {
-      position: absolute;
-      bottom: 10px;
-      left: 50%;
-      width: 70px;
-      height: 70px;
-      background: url('WhatsApp Image 2025-07-26 at 23.27.41_80885bfe.png') no-repeat center/contain;
-      transform: translateX(-50%);
-      transition: transform 0.2s ease;
-    }
-
-    /* حركة السنجاب مثل سونيك أثناء الحركة */
-    .squirrel.spin {
-      animation: spin 0.2s linear infinite;
-    }
-
-    @keyframes spin {
-      from { transform: translateX(-50%) rotate(0deg); }
-      to { transform: translateX(-50%) rotate(360deg); }
-    }
-
-    .falling {
-      position: absolute;
-      top: -50px;
-      width: 40px;
-      height: 40px;
-      background-size: contain;
-      background-repeat: no-repeat;
-    }
-
-    #scoreBoard {
-      font-size: 18px;
-      margin: 10px 0;
-    }
-
-    #controls {
-      display: flex;
-      justify-content: center;
-      margin-top: 40px;
-      gap: 100px;
-    }
-
-    .arrow {
-      width: 50px;
-      height: 50px;
-      background: #fdf151;
-      color: #214382;
-      font-size: 30px;
-      font-weight: bold;
-      text-align: center;
-      line-height: 50px;
-      border-radius: 10px;
-      cursor: pointer;
-      user-select: none;
-      box-shadow: 2px 2px 5px #000;
-    }
-
-    .game-over {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 22px;
-      font-weight: bold;
-      background: rgba(0, 0, 0, 0.7);
-      padding: 20px;
-      border-radius: 10px;
-      text-align: center;
-      color: #fdf151;
-    }
-
-    .play-again {
-      display: inline-block;
-      margin-top: 15px;
-      padding: 8px 16px;
-      font-size: 18px;
-      background: #fdf151;
-      color: #214382;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: 0.3s ease;
-    }
-
-    .play-again:hover {
-      background: #fff06c;
-      transform: scale(1.05);
-    }
-
-    @media (max-width: 600px) {
       .squirrel {
-        width: 60px;
-        height: 60px;
+        position: absolute;
+        bottom: 10px;
+        width: 70px;
+        height: 70px;
+        background: url("WhatsApp Image 2025-07-26 at 23.27.41_80885bfe.png")
+          no-repeat center/contain;
+        transition: transform 0.2s ease;
+        left: 50%;
       }
-      .falling {
-        width: 30px;
-        height: 30px;
+
+      .squirrel.spin {
+        animation: spin 0.2s linear infinite;
       }
-    }
-  </style>
-</head>
-<body>
-  <br />
-  <div id="scoreBoard">Score: 0 | Time: 60 | Best: 0</div>
-  <div id="game">
-    <div class="squirrel" id="squirrel"></div>
-  </div>
-  <div id="controls">
-    <div class="arrow" id="leftArrow">&#8592;</div>
-    <div class="arrow" id="rightArrow">&#8594;</div>
-  </div>
-  <br /><br /><br /><br /><br />
-  
-  <script>
-    const game = document.getElementById("game");
-    const squirrel = document.getElementById("squirrel");
-    const scoreBoard = document.getElementById("scoreBoard");
-    const leftArrow = document.getElementById("leftArrow");
-    const rightArrow = document.getElementById("rightArrow");
 
-    let score = 0;
-    let bestScore = localStorage.getItem("bestScore") || 0;
-    let time = 60;
-    let gameInterval, timerInterval;
-    let squirrelX = game.offsetWidth / 2 - squirrel.offsetWidth / 2;
-    const speed = 15;
-    let moveInterval = null;
-
-    // تحديث لوحة النتائج
-    function updateScoreBoard() {
-      scoreBoard.innerText = `Score: ${score} | Time: ${time} | Best: ${bestScore}`;
-    }
-    updateScoreBoard();
-
-    function moveSquirrel(dir) {
-      squirrelX += dir * speed;
-      if (squirrelX < 0) squirrelX = 0;
-      if (squirrelX > game.offsetWidth - squirrel.offsetWidth) {
-        squirrelX = game.offsetWidth - squirrel.offsetWidth;
-      }
-      squirrel.style.left = squirrelX + "px";
-    }
-
-    function startMove(dir) {
-      if (!moveInterval) {
-        squirrel.classList.add("spin");
-        moveInterval = setInterval(() => moveSquirrel(dir), 40);
-      }
-    }
-
-    function stopMove() {
-      clearInterval(moveInterval);
-      moveInterval = null;
-      squirrel.classList.remove("spin");
-    }
-
-    function dropObject() {
-      const object = document.createElement("div");
-      const isHazelnut = Math.random() < 0.2;
-      object.classList.add("falling");
-      object.style.backgroundImage = isHazelnut
-        ? "url('image_processing20200908-32423-324wf6.png')"
-        : "url('a66c3ec0209a862563db03f20bc05b74.png')";
-      object.dataset.type = isHazelnut ? "hazelnut" : "corn";
-      object.style.left = Math.random() * (game.offsetWidth - 40) + "px";
-      game.appendChild(object);
-
-      let fall = setInterval(() => {
-        const top = parseInt(window.getComputedStyle(object).top || 0);
-        if (top > game.offsetHeight - squirrel.offsetHeight - 20) {
-          const squirrelRect = squirrel.getBoundingClientRect();
-          const objRect = object.getBoundingClientRect();
-
-          // تقليل الهت بوكس للبندق بشكل أكبر
-          let adjustedRect = objRect;
-          if (object.dataset.type === "hazelnut") {
-            adjustedRect = {
-              left: objRect.left + 10,
-              right: objRect.right - 10,
-              top: objRect.top + 10,
-              bottom: objRect.bottom - 10
-            };
-          }
-
-          if (
-            adjustedRect.left < squirrelRect.right &&
-            adjustedRect.right > squirrelRect.left &&
-            adjustedRect.bottom > squirrelRect.top
-          ) {
-            if (object.dataset.type === "hazelnut") {
-              endGame("You hit a hazelnut! Game Over!");
-            } else {
-              score++;
-              updateScoreBoard();
-            }
-            object.remove();
-            clearInterval(fall);
-          } else if (top > game.offsetHeight - 10) {
-            object.remove();
-            clearInterval(fall);
-          }
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
         }
-        object.style.top = top + 5 + "px";
-      }, 50);
-    }
-
-    function startGame() {
-      score = 0;
-      time = 60; // وقت دقيقة
-      updateScoreBoard();
-      gameInterval = setInterval(dropObject, 1000);
-      timerInterval = setInterval(() => {
-        time--;
-        updateScoreBoard();
-        if (time <= 0) endGame("Time's up! Final Score: " + score);
-      }, 1000);
-    }
-
-    function endGame(message) {
-      clearInterval(gameInterval);
-      clearInterval(timerInterval);
-      document.querySelectorAll(".falling").forEach(obj => obj.remove());
-
-      if (score > bestScore) {
-        bestScore = score;
-        localStorage.setItem("bestScore", bestScore);
+        to {
+          transform: rotate(360deg);
+        }
       }
 
-      const gameOver = document.createElement("div");
-      gameOver.classList.add("game-over");
-      gameOver.innerHTML = `
+      .falling {
+        position: absolute;
+        top: -50px;
+        width: 40px;
+        height: 40px;
+        background-size: contain;
+        background-repeat: no-repeat;
+      }
+
+      #scoreBoard {
+        font-size: 18px;
+        margin: 10px 0;
+      }
+
+      #controls {
+        display: flex;
+        justify-content: center;
+        margin-top: 40px;
+        gap: 100px;
+      }
+
+      .arrow {
+        width: 50px;
+        height: 50px;
+        background: #fdf151;
+        color: #214382;
+        font-size: 30px;
+        font-weight: bold;
+        text-align: center;
+        line-height: 50px;
+        border-radius: 10px;
+        cursor: pointer;
+        user-select: none;
+        box-shadow: 2px 2px 5px #000;
+      }
+
+      .game-over {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 22px;
+        font-weight: bold;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        color: #fdf151;
+      }
+
+      .play-again {
+        display: inline-block;
+        margin-top: 15px;
+        padding: 8px 16px;
+        font-size: 18px;
+        background: #fdf151;
+        color: #214382;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.3s ease;
+      }
+
+      .play-again:hover {
+        background: #fff06c;
+        transform: scale(1.05);
+      }
+
+      @media (max-width: 600px) {
+        .squirrel {
+          width: 60px;
+          height: 60px;
+        }
+        .falling {
+          width: 30px;
+          height: 30px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <br />
+    <div id="scoreBoard">Score: 0 | Time: 60 | Best: 0</div>
+    <div id="game">
+      <div class="squirrel" id="squirrel"></div>
+    </div>
+    <div id="controls">
+      <div class="arrow" id="leftArrow">&#8592;</div>
+      <div class="arrow" id="rightArrow">&#8594;</div>
+    </div>
+    <br /><br /><br /><br /><br />
+    <script>
+      const game = document.getElementById("game");
+      const squirrel = document.getElementById("squirrel");
+      const scoreBoard = document.getElementById("scoreBoard");
+      const leftArrow = document.getElementById("leftArrow");
+      const rightArrow = document.getElementById("rightArrow");
+
+      let score = 0;
+      let bestScore = localStorage.getItem("bestScore") || 0;
+      let time = 60;
+      let gameInterval, timerInterval;
+      let squirrelX = game.offsetWidth / 2 - squirrel.offsetWidth / 2;
+      const speed = 15;
+      let moveInterval = null;
+
+      function updateScoreBoard() {
+        scoreBoard.innerText = `Score: ${score} | Time: ${time} | Best: ${bestScore}`;
+      }
+      updateScoreBoard();
+
+      function moveSquirrel(dir) {
+        squirrelX += dir * speed;
+
+        const minX = 0;
+        const maxX = game.offsetWidth - squirrel.offsetWidth;
+
+        if (squirrelX < minX) squirrelX = minX;
+        if (squirrelX > maxX) squirrelX = maxX;
+
+        squirrel.style.left = squirrelX + "px";
+
+        // ✅ انعكاس فقط عند الاتجاه يمين
+        if (dir === 1) {
+          squirrel.style.transform = "scaleX(-1)";
+        } else {
+          squirrel.style.transform = "none";
+        }
+      }
+
+      function startMove(dir) {
+        if (!moveInterval) {
+          squirrel.classList.add("spin");
+          moveSquirrel(dir);
+          moveInterval = setInterval(() => moveSquirrel(dir), 40);
+        }
+      }
+
+      function stopMove() {
+        clearInterval(moveInterval);
+        moveInterval = null;
+        squirrel.classList.remove("spin");
+      }
+
+      function dropObject() {
+        const object = document.createElement("div");
+        const isHazelnut = Math.random() < 0.2;
+        object.classList.add("falling");
+        object.style.backgroundImage = isHazelnut
+          ? "url('image_processing20200908-32423-324wf6.png')"
+          : "url('a66c3ec0209a862563db03f20bc05b74.png')";
+        object.dataset.type = isHazelnut ? "hazelnut" : "corn";
+        object.style.left = Math.random() * (game.offsetWidth - 40) + "px";
+        game.appendChild(object);
+
+        let fall = setInterval(() => {
+          const top = parseInt(window.getComputedStyle(object).top || 0);
+          if (top > game.offsetHeight - squirrel.offsetHeight - 20) {
+            const squirrelRectRaw = squirrel.getBoundingClientRect();
+            const squirrelRect = {
+              left: squirrelRectRaw.left + 10,
+              right: squirrelRectRaw.right - 10,
+              top: squirrelRectRaw.top + 10,
+              bottom: squirrelRectRaw.bottom - 10,
+            };
+
+            const objRectRaw = object.getBoundingClientRect();
+            let adjustedRect = objRectRaw;
+
+            if (object.dataset.type === "hazelnut") {
+              adjustedRect = {
+                left: objRectRaw.left + 10,
+                right: objRectRaw.right - 10,
+                top: objRectRaw.top + 10,
+                bottom: objRectRaw.bottom - 10,
+              };
+            }
+
+            // ✅ تصادم كامل ودقيق من كل الجهات
+            if (
+              adjustedRect.left < squirrelRect.right &&
+              adjustedRect.right > squirrelRect.left &&
+              adjustedRect.top < squirrelRect.bottom &&
+              adjustedRect.bottom > squirrelRect.top
+            ) {
+              if (object.dataset.type === "hazelnut") {
+                endGame("You hit a hazelnut! Game Over!");
+              } else {
+                score++;
+                updateScoreBoard();
+              }
+              object.remove();
+              clearInterval(fall);
+            } else if (top > game.offsetHeight - 10) {
+              object.remove();
+              clearInterval(fall);
+            }
+          }
+          object.style.top = top + 5 + "px";
+        }, 50);
+      }
+
+      function startGame() {
+        score = 0;
+        time = 60;
+        updateScoreBoard();
+        gameInterval = setInterval(dropObject, 1000);
+        timerInterval = setInterval(() => {
+          time--;
+          updateScoreBoard();
+          if (time <= 0) endGame("Time's up! Final Score: " + score);
+        }, 1000);
+      }
+
+      function endGame(message) {
+        clearInterval(gameInterval);
+        clearInterval(timerInterval);
+        document.querySelectorAll(".falling").forEach((obj) => obj.remove());
+
+        if (score > bestScore) {
+          bestScore = score;
+          localStorage.setItem("bestScore", bestScore);
+        }
+
+        const gameOver = document.createElement("div");
+        gameOver.classList.add("game-over");
+        gameOver.innerHTML = `
         ${message}<br>
         <button class="play-again" onclick="restartGame()">Play Again</button>
       `;
-      game.appendChild(gameOver);
-      updateScoreBoard();
-    }
+        game.appendChild(gameOver);
+        updateScoreBoard();
+      }
 
-    function restartGame() {
-      const gameOverDiv = document.querySelector(".game-over");
-      if (gameOverDiv) gameOverDiv.remove();
-      startGame();
-    }
+      function restartGame() {
+        const gameOverDiv = document.querySelector(".game-over");
+        if (gameOverDiv) gameOverDiv.remove();
+        startGame();
+      }
 
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "ArrowLeft") startMove(-1);
-      if (e.key === "ArrowRight") startMove(1);
-    });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowLeft") startMove(-1);
+        if (e.key === "ArrowRight") startMove(1);
+      });
 
-    document.addEventListener("keyup", stopMove);
+      document.addEventListener("keyup", stopMove);
 
-    leftArrow.addEventListener("mousedown", () => startMove(-1));
-    rightArrow.addEventListener("mousedown", () => startMove(1));
-    leftArrow.addEventListener("mouseup", stopMove);
-    rightArrow.addEventListener("mouseup", stopMove);
+      leftArrow.addEventListener("mousedown", () => startMove(-1));
+      rightArrow.addEventListener("mousedown", () => startMove(1));
+      leftArrow.addEventListener("mouseup", stopMove);
+      rightArrow.addEventListener("mouseup", stopMove);
 
-    leftArrow.addEventListener("touchstart", (e) => { e.preventDefault(); startMove(-1); });
-    rightArrow.addEventListener("touchstart", (e) => { e.preventDefault(); startMove(1); });
-    leftArrow.addEventListener("touchend", stopMove);
-    rightArrow.addEventListener("touchend", stopMove);
+      leftArrow.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        startMove(-1);
+      });
+      rightArrow.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        startMove(1);
+      });
+      leftArrow.addEventListener("touchend", stopMove);
+      rightArrow.addEventListener("touchend", stopMove);
 
-    window.onload = startGame;
-  </script>
-</body>
+      window.onload = startGame;
+    </script>
+  </body>
 </html>
-
-
-
